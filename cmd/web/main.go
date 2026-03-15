@@ -2,16 +2,44 @@ package main
 
 import (
 	"net/http"
-	handlers "web3/pckge/handlers"
-	helpers "web3/pckge/helpers"
+	"time"
+	"web3/pckge/config"
+	"web3/pckge/handlers"
+	"web3/pckge/helpers"
+
+	"github.com/alexedwards/scs/v2"
 )
 
-func main() {
-	http.HandleFunc("/", handlers.HomeHandler)
-	http.HandleFunc("/about", handlers.AboutHandler)
+var sessionManager *scs.SessionManager
+var app config.AppConfig
 
-	err := http.ListenAndServe(":8080", nil)
+func main() {
+	sessionManager = scs.New()
+	sessionManager.Lifetime = 24 * time.Hour
+	sessionManager.Cookie.Persist = true
+	sessionManager.Cookie.Secure = false //set to false because we dont have a https server
+	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+	app.Session = sessionManager
+
+	repo := handlers.NewRepo(&app)
+	handlers.NewHandlers(repo)
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: routes(&app),
+	}
+
+	err := srv.ListenAndServe()
+
 	if err != nil {
 		helpers.ErrorCheck(err)
 	}
+
+	// // http.HandleFunc("/", handlers.HomeHandler)
+	// // http.HandleFunc("/about", handlers.AboutHandler)
+
+	// err := http.ListenAndServe(":8080", nil)
+	// if err != nil {
+	// 	helpers.ErrorCheck(err)
+	// }
 }
