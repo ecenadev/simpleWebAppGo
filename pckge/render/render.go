@@ -5,11 +5,18 @@ import (
 	"html/template"
 	"net/http"
 	"web3/pckge/models"
+
+	"github.com/justinas/nosurf"
 )
 
 var tmplCache = make(map[string]*template.Template)
 
-func RenderTemplate(w http.ResponseWriter, t string, pd *models.PageData) {
+func AddCSRFData(pd *models.PageData, r *http.Request) *models.PageData {
+	pd.CSRFToken = nosurf.Token(r)
+	return pd
+}
+
+func RenderTemplate(w http.ResponseWriter, t string, pd *models.PageData, request *http.Request) {
 	var tmpl *template.Template
 	var err error
 	_, inMap := tmplCache[t]
@@ -25,6 +32,7 @@ func RenderTemplate(w http.ResponseWriter, t string, pd *models.PageData) {
 
 	//load the template to the template variable
 	tmpl = tmplCache[t]
+	pd = AddCSRFData(pd, request)
 	err = tmpl.Execute(w, pd)
 	if err != nil {
 		fmt.Println(err)

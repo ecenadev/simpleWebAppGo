@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/gob"
 	"net/http"
 	"time"
 	"web3/pckge/config"
 	"web3/pckge/handlers"
 	"web3/pckge/helpers"
+	"web3/pckge/models"
 
 	"github.com/alexedwards/scs/v2"
 )
@@ -14,6 +16,8 @@ var sessionManager *scs.SessionManager
 var app config.AppConfig
 
 func main() {
+	gob.Register(models.Article{})
+
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
 	sessionManager.Cookie.Persist = true
