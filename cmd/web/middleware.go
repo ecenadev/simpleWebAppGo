@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
+	"web3/pckge/helpers"
 
 	"github.com/justinas/nosurf"
 )
@@ -35,4 +37,16 @@ func NoSurf(next http.Handler) http.Handler {
 		SameSite: http.SameSiteLaxMode,
 	})
 	return noSurfHandler
+}
+
+func Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !helpers.IsAuthenticated(r) {
+			app.Session.Put(r.Context(), "error", "You aren't logged in")
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			log.Fatal("Error logging in")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

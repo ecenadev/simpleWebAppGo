@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"web3/pckge/config"
 	"web3/pckge/models"
 
 	"github.com/justinas/nosurf"
@@ -11,8 +12,21 @@ import (
 
 var tmplCache = make(map[string]*template.Template)
 
+var app *config.AppConfig
+
+func NewAppConfig(a *config.AppConfig) {
+	app = a
+}
+
 func AddCSRFData(pd *models.PageData, r *http.Request) *models.PageData {
 	pd.CSRFToken = nosurf.Token(r)
+
+	if app.Session.Exists(r.Context(), "user_id") {
+		pd.IsAuthenticated = 1
+	} else {
+		pd.IsAuthenticated = 0
+	}
+
 	return pd
 }
 
